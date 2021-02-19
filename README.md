@@ -1,7 +1,5 @@
-# TP Final Curso Series Temporales
+# TP Final Curso Series Temporales - UNLP 
 
-## UNLP 
-## Profesor: Aurelio Fern·ndez Bariviera 
+## Profesor: Aurelio Fern√°ndez Bariviera 
 
-
-Alumnos: Esteban Schab, Anabella De Battista
+## Alumnos: Esteban Schab, Anabella De Battista
