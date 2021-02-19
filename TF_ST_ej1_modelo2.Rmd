@@ -34,7 +34,7 @@ library('ftsa')
 
 
 ```{r path, echo=FALSE}
-knitr::opts_knit$set(root.dir = 'D:/CURSOS/2020 UNLP Series Temporales/Trabajo Final/markdown/')
+knitr::opts_knit$set(root.dir = './data/')
 ```
 
 \clearpage 
@@ -50,7 +50,7 @@ b. Realizar un pronóstico out-of sample, sobre los últimos 10 datos. Determina
 # Modelo 2 
 
 ```{r load_ts2}
-modelo2 <- read.csv("./modelo2.csv", header = TRUE, sep = ",", quote = "\"", 
+modelo2 <- read.csv("./data/modelo2.csv", header = TRUE, sep = ",", quote = "\"", 
                     dec = ".", fill = TRUE)
 m2_ts <- ts(modelo2[,2])
 ```
@@ -330,12 +330,4 @@ error(forecast=AR2_11_forecast, true=m2_ts[141:150], method=c("mae"))
 error(forecast=AR2_11_forecast, true=m2_ts[141:150], method=c("mape"))
 
 ```
-
-
-
-
-
-\clearpage
-
-
 

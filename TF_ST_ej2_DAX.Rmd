@@ -44,7 +44,7 @@ library('stargazer')
 
 
 ```{r read-file}
-archivo <- 'D:/CURSOS/2020 UNLP Series Temporales/Trabajo Final/Datos-dax-nasdaq-originales.xlsx'
+archivo <- './data/Datos-dax-nasdaq-originales.xlsx'
 dax_nasdaq_dow <- read_excel(archivo, col_names = TRUE)
 names(dax_nasdaq_dow)
 ```

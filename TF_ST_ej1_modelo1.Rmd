@@ -50,7 +50,7 @@ b. Realizar un pronóstico out-of sample, sobre los últimos 10 datos. Determina
 # Modelo 1
 
 ```{r load_ts1}
-modelo1 <- read.csv("./modelo1.csv", header = TRUE, sep = ",", quote = "\"", 
+modelo1 <- read.csv("./data/modelo1.csv", header = TRUE, sep = ",", quote = "\"", 
                     dec = ".", fill = TRUE)
 m1_ts <- ts(modelo1[,2])
 ```
@@ -311,6 +311,7 @@ points(AR1_11_forecast - 2*AR1_11_forecast_se, type = "l", col = 2, lty = 2)
 points(AR1_11_forecast + 2*AR1_11_forecast_se, type = "l", col = 2, lty = 2)
 points(sample.fin+1:150,m1_ts[sample.fin+1:150], type = "l", col = 3)
 ```
+
 ## Otro método para pronóstico con ARMA(1,1)
 
 ```{r otro2_2, fig.align='center', fig.width=7, fig.height=3}
@@ -332,10 +333,6 @@ error(forecast=AR1_11_forecast, true=m1_ts[141:150], method=c("mae"))
 error(forecast=AR1_11_forecast, true=m1_ts[141:150], method=c("mape"))
 
 ```
-
-
-
-
 
 \clearpage
 
