@@ -1,7 +1,7 @@
 ---
 title: "Series Temporales - Trabajo Final"
 author: "Esteban Schab - Anabella De Battista"
-date: "!r Sys.Date()"
+date: "Febrero 2021"
 output:
   pdf_document:
     toc: true
@@ -34,7 +34,7 @@ library('ftsa')
 
 
 ```{r path, echo=FALSE}
-knitr::opts_knit$set(root.dir = 'D:/CURSOS/2020 UNLP Series Temporales/Trabajo Final/markdown/')
+knitr::opts_knit$set(root.dir = 'D:/GitHub/seriestemporales')
 ```
 
 \clearpage 
@@ -241,7 +241,7 @@ points(AR1_02_forecast - 2*AR1_02_forecast_se, type = "l", col = 2, lty = 2)
 points(AR1_02_forecast + 2*AR1_02_forecast_se, type = "l", col = 2, lty = 2)
 points(sample.fin+1:150,m1_ts[sample.fin+1:150], type = "l", col = 2)
 ```
-
+\clearpage
 
 ## Otro método para pronóstico con ARMA(0,2)
 
@@ -288,6 +288,7 @@ que los residuos son ruido blanco.
 Por lo tanto estamos en condiciones de realizar un pronóstico para las siguientes 10 
 observaciones de la serie.
 
+\clearpage
 
 ## Pronóstico para Modelo 1 con ARMA(1,1)
 
@@ -311,6 +312,7 @@ points(AR1_11_forecast - 2*AR1_11_forecast_se, type = "l", col = 2, lty = 2)
 points(AR1_11_forecast + 2*AR1_11_forecast_se, type = "l", col = 2, lty = 2)
 points(sample.fin+1:150,m1_ts[sample.fin+1:150], type = "l", col = 3)
 ```
+\clearpage
 
 ## Otro método para pronóstico con ARMA(1,1)
 
@@ -334,7 +336,7 @@ error(forecast=AR1_11_forecast, true=m1_ts[141:150], method=c("mape"))
 
 ```
 
-\clearpage
+
 
 
 

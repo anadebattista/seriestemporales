@@ -1,20 +1,22 @@
 ---
 title: "Series Temporales - Trabajo Final"
 author: "Esteban Schab - Anabella De Battista"
-date: "!r Sys.Date()"
+date: "Febrero 2021"
 output:
-  html_document:
-    toc: yes
-    df_print: paged
   pdf_document:
-    toc: yes
-    fig_width: 70
-    fig_height: 60
-    fig_caption: yes
-    df_print: default
-    keep_tex: yes
+    toc: true
+    toc_depth: 2
+    fig_width: 6.5
+    fig_height: 4.5
+    fig_caption: true
+    df_print: kable
+    keep_tex: true
+    highlight: tango
 fontsize: 11pt
 geometry: margin=1in
+always_allow_html: true
+header-includes:
+  - \usepackage{booktabs}
 ---
 
 ```{r  knitr-options, include=FALSE}
