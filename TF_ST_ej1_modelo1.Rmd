@@ -1,0 +1,343 @@
+---
+title: "Series Temporales - Trabajo Final"
+author: "Esteban Schab - Anabella De Battista"
+date: "!r Sys.Date()"
+output:
+  pdf_document:
+    toc: true
+    fig_width: 70
+    fig_height: 60
+    fig_caption: true
+    df_print: default
+    keep_tex: true
+fontsize: 11pt
+geometry: margin=1in
+---
+
+```{r  knitr-options, include=FALSE}
+knitr::opts_chunk$set(fig.path='RmdFigs/', warning=FALSE, message=FALSE, out.width = '90%')
+```
+
+
+```{r load-packages, include=FALSE}
+library('ggplot2')
+library('forecast')
+library('tseries')
+library('astsa')
+library('gtools') #libreria para generar las permutaciones
+library('xtable')
+library('readr')
+library('fma')
+library('ggfortify')
+library('ftsa')
+```
+
+
+```{r path, echo=FALSE}
+knitr::opts_knit$set(root.dir = 'D:/CURSOS/2020 UNLP Series Temporales/Trabajo Final/markdown/')
+```
+
+\clearpage 
+
+# Ejercicio 1 - Modelos ARMA
+
+Se requiere:
+
+a. Identificación del modelo empleando los primeros 140 registros mediante ACF, PACF y AIC.
+
+b. Realizar un pronóstico out-of sample, sobre los últimos 10 datos. Determinar la precisión del pronóstico de los dos mejores modelos calculados en en apartado (a), mediante el error cuadrático medio (mean squared error) y el error absoluto medio (mean absolute error).
+
+# Modelo 1
+
+```{r load_ts1}
+modelo1 <- read.csv("./modelo1.csv", header = TRUE, sep = ",", quote = "\"", 
+                    dec = ".", fill = TRUE)
+m1_ts <- ts(modelo1[,2])
+```
+
+## Estadísticas principales 
+
+```{r show_dm1}
+summary(m1_ts)
+```
+
+
+
+## Gráfico de la serie temporal
+
+```{r plot_ts1, echo=FALSE, fig.align='center', fig.width=7, fig.height=3} 
+ggplot(modelo1) + 
+  geom_line(aes(x = X, y = x), colour = "red") + 
+  labs(x = "X", y = "Observaciones Modelo 1")
+```
+En base al gráfico la serie aparenta ser constante en media y en varianza, por lo que se 
+podría pensar que es estacionaria.
+
+### Histograma 
+
+```{r histograma_m1, fig.align='center', fig.width=7, fig.height=3}
+hist(m1_ts, prob=TRUE, main = "Histograma Modelo 1", xlab = "x", ylab = "frecuencia")
+x <- seq(min(m1_ts), max(m1_ts), length = 40)
+f <- dnorm(x, mean = mean(m1_ts), sd = sd(m1_ts))
+lines(x, f, col = "red", lwd = 2)
+```
+
+
+En base al histograma se ve que la distribución de los datos se ajusta a una curva normal.
+
+### Gráficas ACF y PACF
+
+```{r acfM1, fig.align='center', fig.width=7, fig.height=3}
+acf(m1_ts, main = "ACF - Modelo 1")
+```
+```{r pacfM1, fig.align='center', fig.width=7, fig.height=3}
+pacf(m1_ts, main = "PACF - Modelo 1")
+```
+
+De acuerdo al gráfico de autocorrelación se puede apreciar que la serie es estacionaria ya que 
+la función decae a medida que aumentan los rezagos en el tiempo. 
+No existe componente estacional.
+
+
+Si se analizan las gráficas  ACF y PACF se deduce que es posible plantear varios modelos tentativos
+para el análisis, realizando combinaciones de p y q entre 0 y 2.
+
+Previamente se descarta que exista componente estacional en la serie de datos.
+
+```{r verif_s, eval=TRUE}
+fit <- tbats(m1_ts)
+s <- !is.null(fit$seasonal)
+s
+```
+El hecho de que **s=FALSE** indica que no hay estacionalidad en la serie de tiempo modelo1.
+
+
+
+## Verificación de que la serie es estacionaria
+
+Aplicamos el test de estacionariedad ADF (Dickey-Fuller).
+
+Planteamiento de Hipótesis
+Significancia $\alpha$ = 0.05
+H0: La serie es no estacionaria: tiene raíz unitaria
+H1: La serie es estacionaria: no tiene raíz unitaria
+
+```{r}
+library(tseries)
+adf<-adf.test(m1_ts)
+adf$p.value
+```
+Se aplica el test KPSS para verificar si la serie es estacionaria.
+
+```{r}
+kpss<-kpss.test(m1_ts)
+kpss$p.value
+```
+
+
+Como el p-valor del Test de Dickey-Fuller da menor que $\alpha$ y en el caso del 
+test KPSS da mayor que $\alpha$, concluimos que la serie *es estacionaria*.
+
+
+
+## Configuración de parámetros para procesos ARMA, variando p y q.
+
+```{r config_arma}
+p.maximo <- 2  # orden maximo p 
+q.maximo <- 2  # orden maximo q 
+cantidad.modelos <- (p.maximo+1)*(q.maximo+1)  
+
+#combinaciones de p y q
+orden.modelos <- permutations(p.maximo+1,2,0:p.maximo,repeats.allowed = TRUE) 
+resumen<- matrix(0,cantidad.modelos,6)  #matriz resumen (loglik, sigma2 y aic)
+colnames(resumen) <- c("Loglik","Sigma2","AIC","AIC diff",
+                       "Likelihood_model","Akaike weights")
+ #nombre de las filas
+nombres <- matrix(0,1,cantidad.modelos)
+for (modelo.numero in 1:cantidad.modelos){
+  nombres[1,modelo.numero] <- paste("p=",as.character(orden.modelos[modelo.numero,1]),
+                                    "q=",as.character(orden.modelos[modelo.numero,2]))
+}
+rownames(resumen) <- nombres
+```
+
+
+## Prueba de los modelos con los primeros 140 valores de la serie.
+
+```{r arma_modelo1}
+fit_m1_ts <- window(m1_ts, start=1, end=140)
+
+residuos.modelos <- matrix(0,length(fit_m1_ts),cantidad.modelos)
+colnames(residuos.modelos)<- nombres
+celda <- 0
+for(p in 0:p.maximo){
+  for(q in 0:q.maximo){
+    celda= celda+1   
+    AR1 <- arima(fit_m1_ts, order = c(p,0,q))
+    residuos.modelos[,celda] <- AR1$residuals
+    resumen[celda,1] <- AR1$loglik
+    resumen[celda,2] <- AR1$sigma2
+    resumen[celda,3] <- AR1$aic
+  }}
+resumen[,4]<-resumen[,3]-min(resumen[,3])
+resumen[,5]<-exp(-0.5*resumen[,4])
+resumen[,6]<-resumen[,5]/sum(resumen[,5])
+
+# resumen de resultados
+round(resumen,digits=4) 
+```
+
+En base a los resultados se aprecia que para el dasaset *modelo1*, los dos mejores modelos son:
+arma3: ARMA(0,2) cuyo valor para  *AIC diff* es = 0.0000 y 
+arma5: ARMA(1,1) cuyo valor para  *AIC diff* es = 0.1385.
+
+
+
+Para validar el modelo se grafica el correlograma de los residuos para comprobar
+que son ruido blanco.
+
+
+```{r acf1_arma3, fig.align='center', fig.width=7, fig.height=3} 
+# Calculo ACF y PACF para el mejor modelo ARMA para el dataset modelo1
+res_m1_arma7 <- residuos.modelos[,3]
+acf2(res_m1_arma7)
+```
+
+En los correlogramas se aprecia que no hay ningún rezago significativo por lo que se puede  decir 
+que los residuos son ruido blanco. 
+
+## Prueba con la función auto.arima
+
+La función auto.arima permite determinar el mejor modelo ARIMA para un conjunto de datos.
+Al ejecutarla en este caso coinicide con el modelo identificado previamente.
+
+```{r}
+  auto.arima(fit_m1_ts, stepwise = FALSE, approximation = FALSE)
+```
+
+Por lo tanto estamos en condiciones de realizar un pronóstico para las siguientes 10 
+observaciones de la serie.
+
+
+## Pronóstico para Modelo 1 con ARMA(0,2)
+
+```{r fit_1_m1, fig.align='center', fig.width=7, fig.height=3}
+#parametros p y q del mejor modelo
+p <- 0
+q <- 2
+#fiteo el modelo con 140 datos (para despues hacer el out-of-sample forecast)
+sample.fin <- 140
+AR1_02 <- arima(m1_ts[1:sample.fin], order = c(p,0,q))
+ts.plot(m1_ts[1:150])
+
+```
+```{r forecast1_m1, fig.align='center', fig.width=7, fig.height=3}
+#plotting the m1_ts series plus the forecast and 95% prediction intervals
+ts.plot(m1_ts[1:sample.fin], xlim = c(1, sample.fin))
+AR1_02_forecast <- predict(AR1_02, n.ahead = length(m1_ts)-sample.fin)$pred
+AR1_02_forecast_se <- predict(AR1_02, n.ahead = length(m1_ts)-sample.fin)$se
+points(AR1_02_forecast, type = "l", col = 3)
+points(AR1_02_forecast - 2*AR1_02_forecast_se, type = "l", col = 2, lty = 2)
+points(AR1_02_forecast + 2*AR1_02_forecast_se, type = "l", col = 2, lty = 2)
+points(sample.fin+1:150,m1_ts[sample.fin+1:150], type = "l", col = 2)
+```
+
+
+## Otro método para pronóstico con ARMA(0,2)
+
+```{r otro1_2, fig.align='center', fig.width=7, fig.height=3}
+library(forecast)
+arima1_3<- arima(m1_ts[1:sample.fin], order = c(0,0,2))
+
+```
+
+
+```{r f_otro1, fig.align='center', fig.width=7, fig.height=3}
+forecast3<-forecast(arima1_3, level = c(95), h = 10)
+autoplot(forecast3)
+```
+## Comprobar los errores de los pronósticos con ARMA(2,0)
+```{r error_m1_20}
+error(forecast=AR1_02_forecast, true=m1_ts[141:150], method=c("mse"))
+error(forecast=AR1_02_forecast, true=m1_ts[141:150], method=c("mae"))
+error(forecast=AR1_02_forecast, true=m1_ts[141:150], method=c("mape"))
+
+```
+
+
+
+\clearpage
+
+
+
+## Prueba del segundo mejor modelo ARMA(1,1) 
+
+Para validar el modelo se grafica el correlograma de los residuos para comprobar
+que son ruido blanco.
+
+
+```{r acf2_arma5, fig.align='center', fig.width=7, fig.height=3} 
+# Calculo ACF y PACF para el mejor modelo ARMA para el dataset modelo1
+res_m1_arma5 <- residuos.modelos[,5]
+acf2(res_m1_arma5)
+```
+
+En los correlogramas se aprecia que no hay ningún rezago significativo por lo que se puede  decir 
+que los residuos son ruido blanco. 
+
+Por lo tanto estamos en condiciones de realizar un pronóstico para las siguientes 10 
+observaciones de la serie.
+
+
+## Pronóstico para Modelo 1 con ARMA(1,1)
+
+```{r fit_2_m1, fig.align='center', fig.width=7, fig.height=3}
+#parametros p y q del mejor modelo
+p <- 1
+q <- 1
+#fiteo el modelo con 140 datos (para despues hacer el out-of-sample forecast)
+sample.fin <- 140
+AR1_11 <- arima(m1_ts[1:sample.fin], order = c(p,0,q))
+ts.plot(m1_ts[1:150])
+
+```
+```{r forecast1_m5, fig.align='center', fig.width=7, fig.height=3}
+#plotting the m1_ts series plus the forecast and 95% prediction intervals
+ts.plot(m1_ts[1:sample.fin], xlim = c(1, sample.fin))
+AR1_11_forecast <- predict(AR1_11, n.ahead = length(m1_ts)-sample.fin)$pred
+AR1_11_forecast_se <- predict(AR1_11, n.ahead = length(m1_ts)-sample.fin)$se
+points(AR1_11_forecast, type = "l", col = 2)
+points(AR1_11_forecast - 2*AR1_11_forecast_se, type = "l", col = 2, lty = 2)
+points(AR1_11_forecast + 2*AR1_11_forecast_se, type = "l", col = 2, lty = 2)
+points(sample.fin+1:150,m1_ts[sample.fin+1:150], type = "l", col = 3)
+```
+## Otro método para pronóstico con ARMA(1,1)
+
+```{r otro2_2, fig.align='center', fig.width=7, fig.height=3}
+library(forecast)
+arima5<- arima(m1_ts[1:sample.fin], order = c(1,0,1))
+
+```
+
+
+```{r f_otro2_2, fig.align='center', fig.width=7, fig.height=3}
+forecast5<-forecast(arima5, level = c(95), h = 10)
+autoplot(forecast5)
+```
+## Comprobar los errores de los pronósticos con ARMA(1,1)
+
+```{r error_m1_11}
+error(forecast=AR1_11_forecast, true=m1_ts[141:150], method=c("mse"))
+error(forecast=AR1_11_forecast, true=m1_ts[141:150], method=c("mae"))
+error(forecast=AR1_11_forecast, true=m1_ts[141:150], method=c("mape"))
+
+```
+
+
+
+
+
+\clearpage
+
+
+
