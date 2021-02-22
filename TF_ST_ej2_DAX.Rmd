@@ -3,20 +3,23 @@ title: "Series Temporales - Trabajo Final"
 author: "Esteban Schab - Anabella De Battista"
 date: "Febrero 2021"
 output:
+  html_document:
+    toc: yes
+    toc_depth: '2'
+    df_print: paged
   pdf_document:
-    toc: true
+    toc: yes
     toc_depth: 2
     fig_width: 6.5
     fig_height: 4.5
-    fig_caption: true
+    fig_caption: yes
     df_print: kable
-    keep_tex: true
+    keep_tex: yes
     highlight: tango
 fontsize: 11pt
 geometry: margin=1in
-always_allow_html: true
-header-includes:
-  - \usepackage{booktabs}
+always_allow_html: yes
+header-includes: \usepackage{booktabs}
 ---
 
 ```{r  knitr-options, include=FALSE}
@@ -175,7 +178,7 @@ levels(df_dax_nasdaq_dow$dia)
 ```
 
 
-```{r boxplot-dax, echo=FALSE, fig.align='center', fig.width=5, fig.height=3} 
+```{r boxplot-dax, echo=FALSE, fig.align='center', fig.width=5, fig.height=2} 
 boxplot_DAX <- ggplot(df_dax_nasdaq_dow, aes(x = dia, y = rdto_dax)) + 
   geom_boxplot(fill = "gray90", color = "gray40", outlier.colour = "#00a2b1") +
   scale_y_continuous(expand = c(0,0), limits=c(min(df_dax_nasdaq_dow$rdto_dax)*1.15, max(df_dax_nasdaq_dow$rdto_dax)*1.15), label = comma) +

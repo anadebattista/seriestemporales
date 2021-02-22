@@ -3,13 +3,16 @@ title: "Series Temporales - Trabajo Final"
 author: "Esteban Schab - Anabella De Battista"
 date: "Febrero 2021"
 output:
+  html_document:
+    toc: yes
+    df_print: paged
   pdf_document:
-    toc: true
+    toc: yes
     fig_width: 70
     fig_height: 60
-    fig_caption: true
+    fig_caption: yes
     df_print: default
-    keep_tex: true
+    keep_tex: yes
 fontsize: 11pt
 geometry: margin=1in
 ---
